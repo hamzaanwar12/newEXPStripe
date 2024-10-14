@@ -1,3 +1,5 @@
+// server.js
+
 const express = require('express');
 const Stripe = require('stripe');
 const cors = require('cors');
@@ -6,13 +8,19 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// Initialize Stripe with your secret key
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2024-09-30', // Update to your desired Stripe API version
+});
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// POST /payment-sheet endpoint
 app.post('/payment-sheet', async (req, res) => {
-  // Log the request body
+  // Log the request body for debugging
   console.log("Request Received:", req.body);
 
   try {
@@ -22,11 +30,15 @@ app.post('/payment-sheet', async (req, res) => {
     // Create an ephemeral key for the customer
     const ephemeralKey = await stripe.ephemeralKeys.create(
       { customer: customer.id },
-      { apiVersion: '2024-09-30.acacia' }
+      { apiVersion: '2024-09-30' } // Ensure this matches your Stripe API version
     );
 
     // Extract amount from the request body
     const { amount } = req.body; // Amount should be in cents
+
+    if (!amount || typeof amount !== 'number') {
+      return res.status(400).json({ error: "Invalid amount provided." });
+    }
 
     // Create a payment intent
     const paymentIntent = await stripe.paymentIntents.create({
@@ -46,16 +58,17 @@ app.post('/payment-sheet', async (req, res) => {
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY, // Ensure you have this in your .env file
     });
   } catch (error) {
+    console.error("Error in /payment-sheet:", error);
     res.status(500).send({ error: error.message });
   }
 });
 
-
-
-app.get(('/', (req, res) => {
+// Corrected GET / route
+app.get('/', (req, res) => {
   res.send('Hello, World!');
-}));
+});
 
+// Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
