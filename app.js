@@ -4,17 +4,23 @@ const express = require('express');
 const Stripe = require('stripe');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const { createClerkClient } = require('@clerk/backend');
 
 dotenv.config();
 
 const app = express();
+
+// Initialize Clerk client
+const clerkClient = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY, // Ensure this is defined in your .env file
+});
 
 // Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-10-28.acacia', // Update to your desired Stripe API version
 });
 
-console.log("Stripe API Secret Key:", process.env.STRIPE_SECRET_KEY);
+// console.log("Stripe API Secret Key:", process.env.STRIPE_SECRET_KEY);
 
 // Middleware
 app.use(cors());
@@ -67,7 +73,37 @@ app.post('/payment-sheet', async (req, res) => {
 
 // Corrected GET / route
 app.get('/', (req, res) => {
-  res.send(`Hello, World! + Stripe API Secret Key: ${process.env.STRIPE_SECRET_KEY}`);
+  // res.send(`Hello, World! + Stripe API Secret Key: ${process.env.STRIPE_SECRET_KEY}`);
+  res.send(`Hello, World! `);
+});
+
+
+
+
+// DELETE /delete-user/:userID endpoint
+app.delete('/delete-user/:userID', async (req, res) => {
+  const { userID } = req.params;
+
+  try {
+    // Check if userID is provided
+    if (!userID) {
+      return res.status(400).json({ error: "User ID is required." });
+    }
+
+    // Attempt to delete the user
+    await clerkClient.users.deleteUser(userID);
+
+    res.status(200).json({ message: `User with ID ${userID} has been deleted successfully.` });
+  } catch (error) {
+    console.error(`Error deleting user with ID ${userID}:`, error);
+
+    // Respond with appropriate error messages
+    if (error.status === 404) {
+      return res.status(404).json({ error: `User with ID ${userID} not found.` });
+    }
+
+    res.status(500).json({ error: "An error occurred while trying to delete the user." });
+  }
 });
 
 // Start the server
