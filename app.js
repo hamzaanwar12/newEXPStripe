@@ -14,6 +14,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-10-28.acacia', // Update to your desired Stripe API version
 });
 
+console.log("Stripe API Secret Key:", process.env.STRIPE_SECRET_KEY);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
