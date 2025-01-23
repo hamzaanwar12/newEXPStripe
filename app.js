@@ -67,7 +67,7 @@ app.post('/payment-sheet', async (req, res) => {
 
 // Corrected GET / route
 app.get('/', (req, res) => {
-  res.send('Hello, World!');
+  res.send(`Hello, World! + Stripe API Secret Key: ${process.env.STRIPE_SECRET_KEY}`);
 });
 
 // Start the server
