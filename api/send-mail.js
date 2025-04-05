@@ -95,6 +95,7 @@ ${message}`,
       success: false,
       message:
         "Failed to send message. Please try again later or contact me directly at hamzaanwar2003@gmail.com",
+        error: error,
     });
   }
 });
